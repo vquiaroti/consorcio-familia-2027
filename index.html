@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consórcio da Família 2027 • Controle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #15543f; --green-deep: #0e3a2b;
+    --gold: #c79a3e; --gold-soft: #e8d6a8;
+    --cream: #f7f2e7; --cream-deep: #ece2cc;
+    --ink: #1e2620; --ink-soft: #56604f;
+    --paid: #2e8b6a; --paid-soft: #d6ece2;
+    --red: #b85450; --red-soft: #f4dad8;
+    --shadow: 0 1px 3px rgba(14,58,43,.08), 0 8px 24px rgba(14,58,43,.06);
+    --shadow-lg: 0 4px 12px rgba(14,58,43,.1), 0 20px 50px rgba(14,58,43,.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink);
+    min-height: 100vh; line-height: 1.5;
+    background-image:
+      radial-gradient(circle at 20% 8%, rgba(199,154,62,.09) 0%, transparent 42%),
+      radial-gradient(circle at 82% 92%, rgba(21,84,63,.07) 0%, transparent 42%);
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 24px 18px 60px; }
+  .mode-badge {
+    position: fixed; top: 12px; right: 12px; z-index: 50;
+    font-size: 10px; letter-spacing: .15em; text-transform: uppercase; font-weight: 700;
+    padding: 6px 12px; border-radius: 99px;
+    background: var(--cream-deep); color: var(--ink-soft);
+    display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow);
+  }
+  .mode-badge.admin { background: var(--green); color: var(--gold); }
+  .mode-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .loading-screen {
+    position: fixed; inset: 0; background: var(--cream); z-index: 300;
+    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+    transition: opacity .4s; font-family: 'Fraunces', serif; color: var(--green);
+  }
+  .loading-screen.hidden { opacity: 0; pointer-events: none; }
+  .spinner {
+    width: 32px; height: 32px; border: 3px solid var(--cream-deep);
+    border-top-color: var(--green); border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .header { text-align: center; padding: 36px 16px 28px; position: relative; }
+  .header::before, .header::after {
+    content: ''; display: block; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 0 auto; max-width: 320px;
+  }
+  .header::before { margin-bottom: 22px; }
+  .header::after { margin-top: 22px; }
+  .eyebrow {
+    font-size: 11px; letter-spacing: .35em; text-transform: uppercase;
+    color: var(--gold); font-weight: 600; margin-bottom: 12px;
+  }
+  .title {
+    font-family: 'Fraunces', serif; font-weight: 400;
+    font-size: clamp(32px, 6.5vw, 50px); color: var(--green-deep);
+    line-height: 1.05; font-variation-settings: "opsz" 144; letter-spacing: -0.02em;
+  }
+  .title em { font-style: italic; font-weight: 300; color: var(--green); }
+  .subtitle {
+    font-family: 'Fraunces', serif; font-style: italic; font-size: 15px;
+    color: var(--ink-soft); margin-top: 10px;
+  }
+  .gestora {
+    display: inline-block; margin-top: 12px; font-size: 12px;
+    letter-spacing: .08em; color: var(--ink-soft);
+    background: var(--cream-deep); padding: 6px 16px; border-radius: 99px;
+  }
+  .gestora b { color: var(--green); font-weight: 600; }
+
+  .pix-card {
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-deep) 100%);
+    color: var(--cream); border-radius: 18px; padding: 22px 24px;
+    margin: 8px 0 26px; box-shadow: var(--shadow-lg); position: relative; overflow: hidden;
+  }
+  .pix-card::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 90% 15%, rgba(199,154,62,.2) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .pix-card > * { position: relative; z-index: 1; }
+  .pix-label {
+    font-size: 11px; letter-spacing: .25em; text-transform: uppercase;
+    color: var(--gold); font-weight: 600; margin-bottom: 8px;
+  }
+  .pix-key { font-family: 'Fraunces', serif; font-size: clamp(22px, 5.5vw, 32px); font-weight: 500; }
+  .pix-info {
+    margin-top: 10px; font-size: 14px; opacity: .92;
+    display: flex; flex-wrap: wrap; gap: 6px 18px;
+  }
+  .pix-info span { display: flex; align-items: center; gap: 6px; }
+  .pix-info b { color: var(--gold); font-weight: 600; }
+  .copy-pix {
+    margin-top: 16px; background: var(--gold); color: var(--green-deep); border: none;
+    padding: 10px 18px; border-radius: 999px; font-family: 'DM Sans', sans-serif;
+    font-weight: 600; font-size: 13px; letter-spacing: .05em; cursor: pointer;
+    transition: all .2s; text-transform: uppercase;
+  }
+  .copy-pix:hover { background: var(--gold-soft); transform: translateY(-1px); }
+  .copy-pix.copied { background: var(--paid); color: white; }
+
+  .section-title {
+    font-family: 'Fraunces', serif; font-style: italic; font-size: 22px;
+    color: var(--green-deep); margin: 4px 0 14px; padding-left: 4px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--gold-soft), transparent);
+  }
+  .month-chips {
+    display: flex; gap: 7px; overflow-x: auto; padding: 4px 2px 12px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+  }
+  .chip {
+    flex: 0 0 auto; background: white; border: 1.5px solid var(--cream-deep);
+    border-radius: 99px; padding: 8px 14px; font-family: 'DM Sans', sans-serif;
+    font-weight: 600; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-soft); cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .chip:hover { border-color: var(--gold); }
+  .chip.active { background: var(--green); border-color: var(--green); color: var(--cream); }
+  .chip .dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    margin-left: 6px; vertical-align: middle;
+  }
+  .chip .dot.done { background: var(--paid); }
+  .chip .dot.partial { background: var(--gold); }
+  .chip .dot.empty { background: var(--red); }
+  .chip.active .dot.done { background: var(--gold-soft); }
+
+  .collection {
+    background: white; border-radius: 18px; padding: 22px 20px 20px;
+    box-shadow: var(--shadow); border: 1px solid rgba(199,154,62,.25); margin-bottom: 30px;
+  }
+  .contemplado-banner {
+    background: linear-gradient(135deg, var(--gold-soft) 0%, #f3e8c8 100%);
+    border-radius: 14px; padding: 16px 18px; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .crown { font-size: 28px; flex: 0 0 auto; }
+  .contemplado-info { flex: 1; min-width: 0; }
+  .contemplado-label {
+    font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--green); font-weight: 700; margin-bottom: 2px;
+  }
+  .contemplado-name {
+    font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500;
+    color: var(--green-deep); line-height: 1.1;
+  }
+  .contemplado-value { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+  .contemplado-value b { color: var(--green); font-family: 'Fraunces', serif; font-size: 16px; }
+  .payout-toggle {
+    flex: 0 0 auto; text-align: center; cursor: pointer; padding: 8px 12px;
+    border-radius: 12px; border: 1.5px solid rgba(21,84,63,.2); transition: all .2s;
+    background: rgba(255,255,255,.5);
+  }
+  .payout-toggle:hover { border-color: var(--green); }
+  .payout-toggle.received { background: var(--paid); border-color: var(--paid); }
+  .payout-toggle.disabled { cursor: default; opacity: .7; }
+  .payout-toggle .pt-icon { font-size: 16px; display: block; color: var(--green); }
+  .payout-toggle.received .pt-icon { color: white; }
+  .payout-toggle .pt-text {
+    font-size: 9px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700;
+    color: var(--green); margin-top: 2px; display: block;
+  }
+  .payout-toggle.received .pt-text { color: white; }
+
+  .coll-summary {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+    padding: 12px 16px; background: var(--cream); border-radius: 12px;
+  }
+  .coll-summary .cs-main {
+    font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; color: var(--green-deep);
+  }
+  .coll-summary .cs-sub { font-size: 12px; color: var(--ink-soft); margin-left: auto; text-align: right; }
+  .coll-summary .cs-sub b { color: var(--green); font-weight: 600; }
+  .coll-bar { height: 7px; background: rgba(21,84,63,.12); border-radius: 99px; overflow: hidden; margin-bottom: 18px; }
+  .coll-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--paid)); border-radius: 99px; transition: width .5s; }
+
+  .members { display: flex; flex-direction: column; gap: 8px; }
+  .member {
+    display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+    border-radius: 12px; border: 1.5px solid var(--cream-deep);
+    background: var(--cream); transition: all .2s;
+  }
+  .member.paid { background: var(--paid-soft); border-color: rgba(46,139,106,.4); }
+  .member-check {
+    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid var(--cream-deep); cursor: pointer; transition: all .2s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: transparent; background: white;
+  }
+  .member-check.disabled { cursor: default; }
+  .member.paid .member-check { background: var(--paid); border-color: var(--paid); color: white; }
+  .member-name {
+    flex: 1; min-width: 0; font-weight: 500; font-size: 15px; color: var(--ink);
+    cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .member-name.disabled { cursor: default; }
+  .member.paid .member-name { color: var(--green); }
+  .member-name .is-contemplado { font-size: 14px; margin-left: 4px; }
+  .member-value {
+    font-size: 12px; font-weight: 600; color: var(--ink-soft); white-space: nowrap;
+  }
+  .member.paid .member-value { color: var(--paid); }
+  .member-wa {
+    flex: 0 0 auto; background: white; border: 1.5px solid var(--cream-deep);
+    width: 34px; height: 34px; border-radius: 10px; cursor: pointer;
+    font-size: 16px; transition: all .2s; display: flex; align-items: center; justify-content: center;
+  }
+  .member-wa:hover { border-color: var(--paid); background: var(--paid-soft); }
+  .member.paid .member-wa { opacity: .35; }
+
+  .timeline { position: relative; padding-left: 8px; }
+  .tl-item { display: flex; gap: 16px; padding-bottom: 4px; position: relative; }
+  .tl-marker { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; }
+  .tl-dot {
+    width: 16px; height: 16px; border-radius: 50%; background: var(--cream-deep);
+    border: 3px solid var(--cream); box-shadow: 0 0 0 1.5px var(--cream-deep); z-index: 1; margin-top: 18px;
+  }
+  .tl-item.received .tl-dot { background: var(--paid); box-shadow: 0 0 0 1.5px var(--paid); }
+  .tl-item.current .tl-dot { background: var(--gold); box-shadow: 0 0 0 1.5px var(--gold), 0 0 0 5px rgba(199,154,62,.2); }
+  .tl-line { width: 2px; flex: 1; background: var(--cream-deep); margin: 2px 0; }
+  .tl-item:last-child .tl-line { display: none; }
+  .tl-card {
+    flex: 1; background: white; border-radius: 14px; padding: 14px 16px; margin-bottom: 12px;
+    box-shadow: var(--shadow); border: 1px solid rgba(199,154,62,.18);
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
+  }
+  .tl-item.current .tl-card { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(199,154,62,.2), var(--shadow); }
+  .tl-month { flex: 0 0 auto; text-align: center; min-width: 44px; }
+  .tl-month .m-short {
+    font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--gold);
+  }
+  .tl-month .m-num { font-family: 'Fraunces', serif; font-size: 20px; color: var(--green-deep); line-height: 1; }
+  .tl-body { flex: 1; min-width: 0; }
+  .tl-name { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 500; color: var(--green-deep); }
+  .tl-meta { font-size: 12px; color: var(--ink-soft); }
+  .tl-badge {
+    flex: 0 0 auto; font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+    font-weight: 700; padding: 5px 10px; border-radius: 99px;
+  }
+  .tl-badge.received { background: var(--paid-soft); color: var(--paid); }
+  .tl-badge.waiting { background: var(--cream-deep); color: var(--ink-soft); }
+  .tl-badge.current { background: var(--gold-soft); color: var(--green-deep); }
+
+  .modal-back {
+    position: fixed; inset: 0; background: rgba(14,58,43,.6); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; animation: fadeIn .2s;
+  }
+  .modal-back.show { display: flex; }
+  @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+  .modal {
+    background: var(--cream); border-radius: 20px; max-width: 480px; width: 100%;
+    max-height: 90vh; overflow-y: auto; padding: 28px 24px 24px;
+    box-shadow: var(--shadow-lg); animation: slideUp .3s;
+  }
+  @keyframes slideUp { from {opacity:0; transform: translateY(20px)} to {opacity:1; transform: translateY(0)} }
+  .modal-title { font-family: 'Fraunces', serif; font-size: 22px; color: var(--green-deep); margin-bottom: 4px; }
+  .modal-sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 18px; }
+  .input-label {
+    display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-soft); font-weight: 600; margin-bottom: 6px;
+  }
+  .phone-input {
+    width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--cream-deep);
+    font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--ink); background: white; margin-bottom: 14px;
+  }
+  .phone-input:focus { outline: none; border-color: var(--gold); }
+  .phone-input:disabled { background: var(--cream-deep); opacity: .7; }
+  .message-box {
+    background: white; border: 1.5px solid var(--cream-deep); border-radius: 12px; padding: 14px;
+    font-size: 13px; line-height: 1.55; color: var(--ink); white-space: pre-wrap;
+    margin-bottom: 16px; max-height: 260px; overflow-y: auto;
+  }
+  .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .modal-actions button {
+    flex: 1; min-width: 130px; padding: 12px 16px; border-radius: 99px;
+    font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 13px; cursor: pointer;
+    border: none; transition: all .2s;
+  }
+  .btn-copy { background: var(--cream-deep); color: var(--green-deep); }
+  .btn-copy:hover { background: var(--gold-soft); }
+  .btn-copy.copied { background: var(--paid); color: white; }
+  .btn-send { background: var(--paid); color: white; }
+  .btn-send:hover { background: #247a5b; }
+  .btn-close { background: transparent; color: var(--ink-soft); flex: 0 0 auto !important; min-width: auto !important; padding: 12px !important; }
+
+  .footer {
+    text-align: center; margin-top: 40px; padding-top: 24px;
+    border-top: 1px solid var(--cream-deep); font-size: 12px; color: var(--ink-soft);
+  }
+  .footer-deco { font-family: 'Fraunces', serif; font-style: italic; font-size: 14px; color: var(--gold); margin-bottom: 8px; }
+  .footer .admin-link {
+    display: inline-block; margin-top: 12px; color: var(--ink-soft);
+    text-decoration: none; font-size: 11px; opacity: .5;
+  }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--green-deep); color: var(--cream); padding: 12px 20px; border-radius: 99px;
+    font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); opacity: 0; transition: all .3s; z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 480px) {
+    .container { padding: 16px 12px 40px; }
+    .collection { padding: 18px 14px 16px; }
+    .contemplado-banner { padding: 14px; gap: 10px; }
+    .crown { font-size: 24px; }
+    .coll-summary { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .coll-summary .cs-sub { margin-left: 0; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loading">
+  <div class="spinner"></div>
+  <div>Carregando...</div>
+</div>
+
+<div class="mode-badge" id="mode-badge">
+  <span class="dot"></span><span id="mode-text">Visualização</span>
+</div>
+
+<div class="container">
+
+  <header class="header">
+    <div class="eyebrow">Controle de Cobranças · 2027</div>
+    <h1 class="title">Consórcio<br><em>da Família</em></h1>
+    <p class="subtitle">Pagamento até dia 09 · repasse ao contemplado dia 10</p>
+    <div class="gestora">Gestora: <b>Danielle do Carmo</b></div>
+  </header>
+
+  <section class="pix-card">
+    <div class="pix-label">Chave PIX (Telefone)</div>
+    <div class="pix-key">31 98540-5294</div>
+    <div class="pix-info">
+      <span>🏦 <b>Nubank</b></span>
+      <span>👤 Favorecida: <b>Maria Cleusa de Jesus</b></span>
+    </div>
+    <button class="copy-pix" onclick="copyPix()">Copiar chave PIX</button>
+  </section>
+
+  <h2 class="section-title">Cobrança do mês</h2>
+  <div class="month-chips" id="month-chips"></div>
+
+  <section class="collection" id="collection"></section>
+
+  <h2 class="section-title">Contemplados do ano</h2>
+  <div class="timeline" id="timeline"></div>
+
+  <footer class="footer">
+    <div class="footer-deco">~ união faz a força ~</div>
+    <div id="footer-hint">Somente visualização. Atualizações feitas pela gestora Danielle.</div>
+    <a href="?admin=" class="admin-link" id="admin-link">área do administrador</a>
+  </footer>
+
+</div>
+
+<div class="modal-back" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Cobrar parcela</div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <label class="input-label">Telefone (com DDD)</label>
+    <input type="tel" class="phone-input" id="phone-input" placeholder="Ex: 31 99999-9999" oninput="onPhoneInput()">
+    <label class="input-label">Mensagem</label>
+    <div class="message-box" id="message-box"></div>
+    <div class="modal-actions">
+      <button class="btn-copy" id="btn-copy" onclick="copyMessage()">📋 Copiar mensagem</button>
+      <button class="btn-send" onclick="openWhatsApp()">💬 Abrir WhatsApp</button>
+      <button class="btn-close" onclick="closeModal()">✕</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+// ====== CONFIG FIREBASE (mesmo projeto da formatura) ======
+const firebaseConfig = {
+  apiKey: "AIzaSyAqfyTDVRCuf8eERptQu5MVcUs9moe7KP8",
+  authDomain: "formatura-ana-sofia.firebaseapp.com",
+  projectId: "formatura-ana-sofia",
+  storageBucket: "formatura-ana-sofia.firebasestorage.app",
+  messagingSenderId: "523953475887",
+  appId: "1:523953475887:web:667a77e150d8502fe151da"
+};
+
+const ADMIN_PASSWORD = "AnaSofia2026#";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ====== DATA ======
+const MEMBERS = [
+  { id:'dani',       name:'Dani (Danielle)' },
+  { id:'teia',       name:'Teia' },
+  { id:'jake',       name:'Jake (Jakeline)' },
+  { id:'iraci',      name:'Tia Iraci' },
+  { id:'walison',    name:'Walison' },
+  { id:'richilay',   name:'Richilay' },
+  { id:'naty_tami',  name:'Naty / Tami' },
+  { id:'fabiano',    name:'Fabiano' },
+  { id:'arlete',     name:'Arlete' },
+  { id:'rafa',       name:'Rafa (Rafaelle)' },
+  { id:'jake_rafa',  name:'Jake / Rafa' },
+  { id:'cleo',       name:'Cleo (Cleonice)' },
+];
+
+const MONTHS = [
+  { name:'Janeiro',   short:'JAN', num:1,  contemplado:'dani',      value:2750 },
+  { name:'Fevereiro', short:'FEV', num:2,  contemplado:'teia',      value:2750 },
+  { name:'Março',     short:'MAR', num:3,  contemplado:'jake',      value:2750 },
+  { name:'Abril',     short:'ABR', num:4,  contemplado:'iraci',     value:2750 },
+  { name:'Maio',      short:'MAI', num:5,  contemplado:'walison',   value:2750 },
+  { name:'Junho',     short:'JUN', num:6,  contemplado:'richilay',  value:2750 },
+  { name:'Julho',     short:'JUL', num:7,  contemplado:'naty_tami', value:2750 },
+  { name:'Agosto',    short:'AGO', num:8,  contemplado:'fabiano',   value:2750 },
+  { name:'Setembro',  short:'SET', num:9,  contemplado:'arlete',    value:2750 },
+  { name:'Outubro',   short:'OUT', num:10, contemplado:'rafa',      value:2750 },
+  { name:'Novembro',  short:'NOV', num:11, contemplado:'jake_rafa', value:2750 },
+  { name:'Dezembro',  short:'DEZ', num:12, contemplado:'cleo',      value:2750 },
+];
+
+const VALUE = 250;
+const YEAR = 2027;
+
+const memberName = id => (MEMBERS.find(m => m.id === id) || {}).name || id;
+const firstName = full => full.split(/\s*[\/(]\s*/)[0].trim().split(' ')[0];
+
+// ====== MODO (admin/view) ======
+const url = new URL(window.location.href);
+const adminParam = url.searchParams.get('admin');
+const IS_ADMIN = adminParam === ADMIN_PASSWORD;
+
+if (adminParam !== null && adminParam !== ADMIN_PASSWORD) {
+  const s = prompt("Senha do administrador:");
+  if (s === ADMIN_PASSWORD) {
+    url.searchParams.set('admin', s);
+    window.location.replace(url.toString());
+  } else {
+    if (s !== null) alert("Senha incorreta.");
+    url.searchParams.delete('admin');
+    window.location.replace(url.toString());
+  }
+}
+
+document.getElementById('mode-text').textContent = IS_ADMIN ? 'Admin • Danielle' : 'Visualização';
+if (IS_ADMIN) document.getElementById('mode-badge').classList.add('admin');
+document.getElementById('footer-hint').textContent = IS_ADMIN
+  ? 'Modo administrador ativo. Toque nos nomes para marcar/desmarcar como pago.'
+  : 'Somente visualização. Atualizações feitas pela gestora Danielle.';
+if (IS_ADMIN) document.getElementById('admin-link').style.display = 'none';
+
+// ====== STATE ======
+let state = { collections: {}, payouts: [], phones: {} };
+let selectedMonth = 0;
+let modalCtx = null;
+
+function defaultState() {
+  const collections = {}, phones = {};
+  MEMBERS.forEach(m => {
+    collections[m.id] = MONTHS.map(() => false);
+    phones[m.id] = '';
+  });
+  return { collections, payouts: MONTHS.map(() => false), phones };
+}
+
+function currentMonthIdx() {
+  const now = new Date();
+  if (now.getFullYear() < YEAR) return 0;
+  if (now.getFullYear() > YEAR) return 11;
+  return now.getMonth();
+}
+
+function firstOpenMonth() {
+  for (let i = 0; i < MONTHS.length; i++) {
+    const contId = MONTHS[i].contemplado;
+    const allPaid = MEMBERS.every(m => m.id === contId || (state.collections[m.id] && state.collections[m.id][i]));
+    if (!allPaid) return i;
+  }
+  return currentMonthIdx();
+}
+
+// ====== FIREBASE ======
+const docRef = doc(db, "controle", "consorcio-2027");
+
+async function ensureDoc() {
+  const snap = await getDoc(docRef);
+  if (!snap.exists()) await setDoc(docRef, defaultState());
+}
+
+async function saveState() {
+  if (!IS_ADMIN) return;
+  try { await setDoc(docRef, state); }
+  catch(e) { console.error('erro ao salvar', e); showToast('Erro ao salvar.'); }
+}
+
+function subscribe() {
+  onSnapshot(docRef, snap => {
+    if (snap.exists()) {
+      const d = snap.data();
+      const def = defaultState();
+      state = {
+        collections: { ...def.collections, ...(d.collections||{}) },
+        payouts: d.payouts || def.payouts,
+        phones: { ...def.phones, ...(d.phones||{}) },
+      };
+    } else {
+      state = defaultState();
+    }
+    selectedMonth = firstOpenMonth();
+    render();
+    document.getElementById('loading').classList.add('hidden');
+  }, err => {
+    console.error(err);
+    document.getElementById('loading').classList.add('hidden');
+    showToast('Erro de conexão.');
+  });
+}
+
+// ====== FORMAT ======
+const brl = v => 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+// ====== RENDER ======
+// Pagantes = todos MENOS o contemplado do mês
+function pagantes(i) {
+  const contId = MONTHS[i].contemplado;
+  return MEMBERS.filter(m => m.id !== contId);
+}
+function monthStatus(i) {
+  const payers = pagantes(i);
+  const paidCount = payers.filter(m => state.collections[m.id] && state.collections[m.id][i]).length;
+  if (paidCount === payers.length) return 'done';
+  if (paidCount === 0) return 'empty';
+  return 'partial';
+}
+
+function renderChips() {
+  const html = MONTHS.map((m, i) => {
+    const st = monthStatus(i);
+    return `<button class="chip ${i===selectedMonth?'active':''}" data-month="${i}">
+      ${m.short}<span class="dot ${st}"></span>
+    </button>`;
+  }).join('');
+  const el = document.getElementById('month-chips');
+  el.innerHTML = html;
+  el.querySelectorAll('.chip').forEach(c => {
+    c.addEventListener('click', () => selectMonth(parseInt(c.dataset.month)));
+  });
+}
+
+function renderCollection() {
+  const m = MONTHS[selectedMonth];
+  const payers = pagantes(selectedMonth);
+  const paidCount = payers.filter(mb => state.collections[mb.id] && state.collections[mb.id][selectedMonth]).length;
+  const collected = paidCount * VALUE;
+  const expected = payers.length * VALUE;
+  const pct = Math.round((paidCount / payers.length) * 100);
+  const received = state.payouts[selectedMonth];
+
+  const membersHtml = MEMBERS.map(mb => {
+    const isContemplado = m.contemplado === mb.id;
+    const paid = state.collections[mb.id] && state.collections[mb.id][selectedMonth];
+
+    if (isContemplado) {
+      return `<div class="member paid" style="background:var(--gold-soft);border-color:var(--gold);">
+        <div class="member-check disabled" style="background:var(--gold);border-color:var(--gold);color:white;">👑</div>
+        <div class="member-name disabled" style="color:var(--green-deep);">
+          ${mb.name} <span class="is-contemplado">(contemplado — não paga)</span>
+        </div>
+        <div class="member-value" style="color:var(--green);">isento</div>
+        <button class="member-wa" style="opacity:.35;cursor:default;" disabled title="Contemplado não paga">—</button>
+      </div>`;
+    }
+
+    const checkDis = IS_ADMIN ? '' : 'disabled';
+    return `<div class="member ${paid?'paid':''}">
+      <div class="member-check ${checkDis}" data-pay="${mb.id}">✓</div>
+      <div class="member-name ${checkDis}" data-pay="${mb.id}">${mb.name}</div>
+      <div class="member-value">${brl(VALUE)}</div>
+      <button class="member-wa" data-cobrar="${mb.id}" title="Cobrar">💬</button>
+    </div>`;
+  }).join('');
+
+  document.getElementById('collection').innerHTML = `
+    <div class="contemplado-banner">
+      <div class="crown">👑</div>
+      <div class="contemplado-info">
+        <div class="contemplado-label">Contemplado(a) de ${m.name}</div>
+        <div class="contemplado-name">${memberName(m.contemplado)}</div>
+        <div class="contemplado-value">Recebe <b>${brl(m.value)}</b> · repasse dia 10 · não paga este mês</div>
+      </div>
+      <div class="payout-toggle ${received?'received':''} ${IS_ADMIN?'':'disabled'}" data-payout title="Marcar se já recebeu">
+        <span class="pt-icon">${received?'✓':'⏳'}</span>
+        <span class="pt-text">${received?'Recebeu':'A pagar'}</span>
+      </div>
+    </div>
+    <div class="coll-summary">
+      <div class="cs-main">${brl(collected)} <span style="font-weight:400;color:var(--ink-soft);font-size:14px;">de ${brl(expected)}</span></div>
+      <div class="cs-sub"><b>${paidCount} de ${payers.length}</b> pagantes · faltam <b>${payers.length-paidCount}</b></div>
+    </div>
+    <div class="coll-bar"><div class="coll-fill" style="width:${pct}%"></div></div>
+    <div class="members">${membersHtml}</div>
+  `;
+
+  if (IS_ADMIN) {
+    document.querySelectorAll('[data-pay]').forEach(el => {
+      el.addEventListener('click', () => togglePay(el.dataset.pay));
+    });
+    const pt = document.querySelector('[data-payout]');
+    if (pt) pt.addEventListener('click', togglePayout);
+  }
+  document.querySelectorAll('[data-cobrar]').forEach(el => {
+    el.addEventListener('click', () => openCobrar(el.dataset.cobrar));
+  });
+}
+
+function renderTimeline() {
+  const cur = currentMonthIdx();
+  const html = MONTHS.map((m, i) => {
+    const received = state.payouts[i];
+    let badgeCls = 'waiting', badgeTxt = 'Aguardando';
+    if (received) { badgeCls = 'received'; badgeTxt = 'Recebeu ✓'; }
+    else if (i === cur) { badgeCls = 'current'; badgeTxt = 'Mês atual'; }
+    const itemCls = received ? 'received' : (i === cur ? 'current' : '');
+    return `<div class="tl-item ${itemCls}">
+      <div class="tl-marker"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-card" data-gomonth="${i}">
+        <div class="tl-month"><div class="m-short">${m.short}</div><div class="m-num">${String(m.num).padStart(2,'0')}</div></div>
+        <div class="tl-body">
+          <div class="tl-name">${memberName(m.contemplado)}</div>
+          <div class="tl-meta">recebe ${brl(m.value)}</div>
+        </div>
+        <div class="tl-badge ${badgeCls}">${badgeTxt}</div>
+      </div>
+    </div>`;
+  }).join('');
+  const el = document.getElementById('timeline');
+  el.innerHTML = html;
+  el.querySelectorAll('[data-gomonth]').forEach(card => {
+    card.addEventListener('click', () => {
+      selectMonth(parseInt(card.dataset.gomonth));
+      document.querySelector('.section-title').scrollIntoView({ behavior:'smooth', block:'start' });
+    });
+  });
+}
+
+function render() { renderChips(); renderCollection(); renderTimeline(); }
+
+// ====== ACTIONS ======
+function selectMonth(i) { selectedMonth = i; render(); }
+
+async function togglePay(memberId) {
+  if (!IS_ADMIN) return;
+  if (MONTHS[selectedMonth].contemplado === memberId) return; // contemplado não paga
+  if (!state.collections[memberId]) state.collections[memberId] = MONTHS.map(() => false);
+  state.collections[memberId][selectedMonth] = !state.collections[memberId][selectedMonth];
+  render(); await saveState();
+}
+async function togglePayout() {
+  if (!IS_ADMIN) return;
+  state.payouts[selectedMonth] = !state.payouts[selectedMonth];
+  render(); await saveState();
+}
+
+window.copyPix = function() {
+  navigator.clipboard.writeText('31985405294').then(() => {
+    const btn = document.querySelector('.copy-pix');
+    btn.textContent = '✓ Copiado!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copiar chave PIX'; btn.classList.remove('copied'); }, 2000);
+    showToast('Chave PIX copiada!');
+  });
+};
+
+// ====== WHATSAPP ======
+function buildMessage(memberId, monthIdx) {
+  const m = MONTHS[monthIdx];
+  const nome = firstName(memberName(memberId));
+  let msg = `Olá ${nome}! 💚\n\n`;
+  msg += `Lembrete do nosso *Consórcio da Família 2027* 🤝\n\n`;
+  msg += `📅 Mês: *${m.name}*\n`;
+  msg += `💰 Sua parcela: *${brl(VALUE)}*\n`;
+  msg += `⏰ Pagar até dia *09*\n`;
+  msg += `👑 Contemplado(a) deste mês: *${memberName(m.contemplado)}* (recebe ${brl(m.value)} no dia 10)\n\n`;
+  msg += `🏦 *PIX (Telefone):* 31985405294\n`;
+  msg += `🏦 Banco: *Nubank*\n`;
+  msg += `👤 Favorecida: *Maria Cleusa de Jesus*\n\n`;
+  msg += `Obrigada pela parceria! 🙏\n`;
+  msg += `_Gestora: Danielle do Carmo_`;
+  return msg;
+}
+
+function openCobrar(memberId) {
+  const m = MONTHS[selectedMonth];
+  if (m.contemplado === memberId) {
+    showToast(`${firstName(memberName(memberId))} é o(a) contemplado(a) deste mês — não paga.`);
+    return;
+  }
+  modalCtx = { memberId, monthIdx: selectedMonth };
+  document.getElementById('modal-title').textContent = memberName(memberId);
+  document.getElementById('modal-sub').textContent = `Parcela de ${m.name} · ${brl(VALUE)}`;
+  const phoneInput = document.getElementById('phone-input');
+  phoneInput.value = formatPhoneDisplay(state.phones[memberId] || '');
+  phoneInput.disabled = !IS_ADMIN;
+  document.getElementById('message-box').textContent = buildMessage(memberId, selectedMonth);
+  document.getElementById('modal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+window.closeModal = function() {
+  document.getElementById('modal').classList.remove('show');
+  document.body.style.overflow = ''; modalCtx = null;
+};
+
+function formatPhoneDisplay(p) {
+  const d = (p||'').replace(/\D/g,'');
+  if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return d;
+}
+window.onPhoneInput = async function() {
+  if (!modalCtx || !IS_ADMIN) return;
+  state.phones[modalCtx.memberId] = document.getElementById('phone-input').value.replace(/\D/g,'');
+  await saveState();
+};
+window.copyMessage = function() {
+  navigator.clipboard.writeText(document.getElementById('message-box').textContent).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✓ Copiado!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Copiar mensagem'; btn.classList.remove('copied'); }, 2000);
+  });
+};
+window.openWhatsApp = function() {
+  if (!modalCtx) return;
+  const msg = buildMessage(modalCtx.memberId, modalCtx.monthIdx);
+  let phone = (state.phones[modalCtx.memberId] || '').replace(/\D/g,'');
+  if (phone && !phone.startsWith('55') && phone.length >= 10) phone = '55' + phone;
+  const wUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(wUrl, '_blank');
+};
+
+function showToast(text) {
+  const t = document.getElementById('toast');
+  t.textContent = text; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+window.showToast = showToast;
+
+// ====== INIT ======
+(async function init() {
+  try { if (IS_ADMIN) await ensureDoc(); } catch(e) {}
+  subscribe();
+})();
+</script>
+
+</body>
+</html>
